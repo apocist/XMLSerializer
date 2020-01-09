@@ -11,7 +11,7 @@
  *
  * @author Andrew
  */
-class XMLSerializer {
+class Test {
     private $OpenTag = "<";
     private $CloseTag = ">";
     private $BackSlash = "/";
@@ -20,30 +20,30 @@ class XMLSerializer {
     public function __construct() {
     }
     
-    private function Array_To_XML($array, $arrayElementName = "element_", $xmlString = "")
+    private function Array_To_XML($array, $xmlWriter, $arrayElementName = "element_")
     {
-        if($xmlString === "")
-        {
-            $xmlString = "{$this->OpenTag}{$this->Root}{$this->CloseTag}";
-        }
-        $startTag = "{$this->OpenTag}{$arrayElementName}{$this->CloseTag}";
-        $xmlString .= $startTag;
+        xmlwriter_start_element($xmlWriter, $arrayElementName);
+        
         foreach($array as $key => $value){
             if(gettype($value) === "string" || gettype($value) === "boolean" || gettype($value) === "integer" || gettype($value) === "double" || gettype($value) === "float")
-            {
-                $elementStartTag = "{$this->OpenTag}{$arrayElementName}_{$key}{$this->CloseTag}";
-                $elementEndTag = "{$this->OpenTag}{$this->BackSlash}{$arrayElementName}_{$key}{$this->CloseTag}";
-                $xmlString .= "{$elementStartTag}{$value}{$elementEndTag}";
+            {  
+                if(is_numeric($key) === true)
+                {
+                    $key = "{$arrayElementName}_{$key}";
+                }
+                xmlwriter_start_element($xmlWriter, $key);
+                xmlwriter_text($xmlWriter, $value);
+                xmlwriter_end_element($xmlWriter);
                 continue;
             }
             else if(gettype($value) === "array")
             {
-                $xmlString = $this->Array_To_XML($value, $arrayElementName, $xmlString);
+                $this->Array_To_XML($value, $arrayElementName, $xmlWriter);
                 continue;
             }
             else if(gettype($value) === "object")
             {
-                $xmlString = $this->Object_To_XML($value, $xmlString);
+                $this->Object_To_XML($value, $xmlWriter);
                 continue;
             }
             else
@@ -51,33 +51,28 @@ class XMLSerializer {
                 continue;
             }
         }
-        $endTag = "{$this->OpenTag}{$this->BackSlash}{$arrayElementName}{$this->CloseTag}";
-        $xmlString .= $endTag;
-        return $xmlString;
+        xmlwriter_end_element($xmlWriter);
+        return $xmlWriter;
     }
     
-    private function Object_To_XML($objElement, $xmlString = "")
+    private function Object_To_XML($objElement, $xmlWriter)
     {
-        if($xmlString === "")
-        {
-            $xmlString = "{$this->OpenTag}{$this->Root}{$this->CloseTag}";
-        }
         foreach($objElement as $key => $value){
             if(gettype($value) !== "array" && gettype($value) !== "object")
             {
-                $startTag = "{$this->OpenTag}{$key}{$this->CloseTag}";
-                $endTag = "{$this->OpenTag}{$this->BackSlash}{$key}{$this->CloseTag}";
-                $xmlString .= "{$startTag}{$value}{$endTag}";
+                xmlwriter_start_element($xmlWriter, $key);
+                xmlwriter_text($xmlWriter, (string)$value);
+                xmlwriter_end_element($xmlWriter);
                 continue;
             }
             else if(gettype($value) === "array")
             {
-                $xmlString = $this->Array_To_XML($value, $key, $xmlString);
+                $this->Array_To_XML($value, $xmlWriter, $key);
                 continue;
             }
             else if(gettype($value) === "object")
             {
-                $xmlString = $this->Object_To_XML($value, $xmlString);
+                $this->Object_To_XML($value, $xmlWriter);
                 continue;
             }
             else
@@ -85,19 +80,39 @@ class XMLSerializer {
                 continue;
             }
         }
-        return $xmlString;
+        return $xmlWriter;
     }
     
-    public function Convert_Object($element, $xmlString = "")
+    public function Serialize_Object($element)
     {
-        $endTag = "{$this->OpenTag}{$this->BackSlash}{$this->Root}{$this->CloseTag}";
-        return "{$this->Object_To_XML($element, $xmlString)}{$endTag}";
+        $xmlWriter = xmlwriter_open_memory();
+        xmlwriter_set_indent($xmlWriter, true);
+        xmlwriter_set_indent_string($xmlWriter, '   ');
+        xmlwriter_start_document($xmlWriter, '1.0', 'UTF-8');
+        
+        xmlwriter_start_element($xmlWriter, $this->Root);
+        $this->Object_To_XML($element, $xmlWriter);
+        xmlwriter_end_element($xmlWriter);
+        
+        xmlwriter_end_document($xmlWriter);
+        
+        return xmlwriter_output_memory($xmlWriter);
     }
     
-    public function Convert_Array($element, $xmlString = "")
-    {
-        $endTag = "{$this->OpenTag}{$this->BackSlash}{$this->Root}{$this->CloseTag}";
-        return "{$this->Array_To_XML($element, $xmlString)}{$endTag}";
+    public function Serialize_Array($element)
+    {   
+        $xmlWriter = xmlwriter_open_memory();
+        xmlwriter_set_indent($xmlWriter, true);
+        xmlwriter_set_indent_string($xmlWriter, '   ');
+        xmlwriter_start_document($xmlWriter, '1.0', 'UTF-8');
+        
+        xmlwriter_start_element($xmlWriter, $this->Root);
+        $this->Array_To_XML($element, $xmlWriter);
+        xmlwriter_end_element($xmlWriter);
+        
+        xmlwriter_end_document($xmlWriter);
+        
+        return xmlwriter_output_memory($xmlWriter);
     }
 }
 

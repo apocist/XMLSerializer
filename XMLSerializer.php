@@ -16,6 +16,8 @@ class XMLSerializer {
     private $CloseTag = ">";
     private $BackSlash = "/";
     public $Root = "root";
+    public $Indent = true;
+    public $IndentString = "   ";
     
     public function __construct() {
     }
@@ -88,8 +90,8 @@ class XMLSerializer {
     public function Serialize_Object($element)
     {
         $xmlWriter = xmlwriter_open_memory();
-        xmlwriter_set_indent($xmlWriter, true);
-        xmlwriter_set_indent_string($xmlWriter, '   ');
+        xmlwriter_set_indent($xmlWriter, $this->Indent);
+        xmlwriter_set_indent_string($xmlWriter, $this->IndentString);
         xmlwriter_start_document($xmlWriter, '1.0', 'UTF-8');
         
         xmlwriter_start_element($xmlWriter, $this->Root);
@@ -104,8 +106,8 @@ class XMLSerializer {
     public function Serialize_Array($element)
     {   
         $xmlWriter = xmlwriter_open_memory();
-        xmlwriter_set_indent($xmlWriter, true);
-        xmlwriter_set_indent_string($xmlWriter, '   ');
+        xmlwriter_set_indent($xmlWriter, $this->Indent);
+        xmlwriter_set_indent_string($xmlWriter, $this->IndentString);
         xmlwriter_start_document($xmlWriter, '1.0', 'UTF-8');
         
         xmlwriter_start_element($xmlWriter, $this->Root);

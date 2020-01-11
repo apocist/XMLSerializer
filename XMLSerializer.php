@@ -18,14 +18,15 @@ class XMLSerializer {
     public $Root = "root";
     public $Indent = true;
     public $IndentString = "   ";
+    public $Version = "1.0";
+    public $Encoding = "UTF-8";
     
     public function __construct() {
     }
     
     private function Array_To_XML($array, $xmlWriter, $arrayElementName = "arrayElement_")
     {
-        xmlwriter_start_element($xmlWriter, $arrayElementName);
-        
+        $xmlWriter->startElement($arrayElementName);
         foreach($array as $key => $value){
             if(gettype($value) === "string" || gettype($value) === "boolean" || gettype($value) === "integer" || gettype($value) === "double" || gettype($value) === "float")
             {  
@@ -33,9 +34,9 @@ class XMLSerializer {
                 {
                     $key = "{$arrayElementName}_{$key}";
                 }
-                xmlwriter_start_element($xmlWriter, $key);
-                xmlwriter_text($xmlWriter, $value);
-                xmlwriter_end_element($xmlWriter);
+                $xmlWriter->startElement($key);
+                $xmlWriter->text($value);
+                $xmlWriter->endElement();
                 continue;
             }
             else if(gettype($value) === "array")
@@ -53,19 +54,19 @@ class XMLSerializer {
                 continue;
             }
         }
-        xmlwriter_end_element($xmlWriter);
+        $xmlWriter->endElement();
         return $xmlWriter;
     }
     
     private function Object_To_XML($objElement, $xmlWriter, $objectElementName = "objectElement")
     {
-        xmlwriter_start_element($xmlWriter, $objectElementName);
+        $xmlWriter->startElement($objectElementName);
         foreach($objElement as $key => $value){
             if(gettype($value) !== "array" && gettype($value) !== "object")
             {
-                xmlwriter_start_element($xmlWriter, $key);
-                xmlwriter_text($xmlWriter, (string)$value);
-                xmlwriter_end_element($xmlWriter);
+                $xmlWriter->startElement($key);
+                $xmlWriter->text((string)$value);
+                $xmlWriter->endElement();
                 continue;
             }
             else if(gettype($value) === "array")
@@ -83,40 +84,36 @@ class XMLSerializer {
                 continue;
             }
         }
-        xmlwriter_end_element($xmlWriter);
+        $xmlWriter->endElement();
         return $xmlWriter;
     }
     
-    public function Serialize_Object($element)
+    public function Serialize_Object($object)
     {
-        $xmlWriter = xmlwriter_open_memory();
-        xmlwriter_set_indent($xmlWriter, $this->Indent);
-        xmlwriter_set_indent_string($xmlWriter, $this->IndentString);
-        xmlwriter_start_document($xmlWriter, '1.0', 'UTF-8');
-        
-        xmlwriter_start_element($xmlWriter, $this->Root);
-        $this->Object_To_XML($element, $xmlWriter);
-        xmlwriter_end_element($xmlWriter);
-        
-        xmlwriter_end_document($xmlWriter);
-        
-        return xmlwriter_output_memory($xmlWriter);
+        $xmlWriter = new XMLWriter();
+        $xmlWriter->openMemory();
+        $xmlWriter->setIndent($this->Indent);
+        $xmlWriter->setIndentString($this->IndentString);
+        $xmlWriter->startDocument($this->Version, $this->Encoding);
+        $xmlWriter->startElement($this->Root);
+        $this->Object_To_XML($object, $xmlWriter);
+        $xmlWriter->endElement();
+        $xmlWriter->endDocument();      
+        return $xmlWriter->outputMemory();
     }
     
-    public function Serialize_Array($element)
+    public function Serialize_Array($array)
     {   
-        $xmlWriter = xmlwriter_open_memory();
-        xmlwriter_set_indent($xmlWriter, $this->Indent);
-        xmlwriter_set_indent_string($xmlWriter, $this->IndentString);
-        xmlwriter_start_document($xmlWriter, '1.0', 'UTF-8');
-        
-        xmlwriter_start_element($xmlWriter, $this->Root);
-        $this->Array_To_XML($element, $xmlWriter);
-        xmlwriter_end_element($xmlWriter);
-        
-        xmlwriter_end_document($xmlWriter);
-        
-        return xmlwriter_output_memory($xmlWriter);
+        $xmlWriter = new XMLWriter();
+        $xmlWriter->openMemory();
+        $xmlWriter->setIndent($this->Indent);
+        $xmlWriter->setIndentString($this->IndentString);
+        $xmlWriter->startDocument($this->Version, $this->Encoding);
+        $xmlWriter->startElement($this->Root);
+        $this->Array_To_XML($array, $xmlWriter);
+        $xmlWriter->endElement();
+        $xmlWriter->endDocument();      
+        return $xmlWriter->outputMemory();
     }
 }
 
